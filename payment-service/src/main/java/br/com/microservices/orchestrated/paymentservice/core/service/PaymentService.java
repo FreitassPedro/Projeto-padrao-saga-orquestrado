@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import static br.com.microservices.orchestrated.paymentservice.core.enums.ESagaStatus.SUCCESS;
+import static br.com.microservices.orchestrated.paymentservice.core.enums.ESagaStatus.*;
 
 
 @Slf4j
@@ -41,17 +41,29 @@ public class PaymentService {
             handleSuccess(event);
         } catch (Exception ex) {
             log.error("Error when trying to make payment");
+            handleFailCurrentNotExecuted(event, ex.getMessage());
         }
         producer.sendEvent(jsonUtil.toJson(event));
     }
 
+    public void realizeRefund(Event event) {
+        event.setStatus(FAIL);
+        event.setSource(CURRENT_SOURCE);
+        try {
+            changePaymentStatusToRefund(event);
+            addHistory(event, "Rollback executed for payment!");
+        } catch (Exception ex) {
+            addHistory(event, "Rollback was not executed for payment: ".concat(ex.getMessage()));
+        }
+        producer.sendEvent(jsonUtil.toJson(event));
+
+    }
 
     private void checkCurrentValidation(Event event) {
         if (paymentRepository.existsByOrderIdAndTransactionId(event.getOrderId(), event.getTransactionId())) {
             throw new ValidationException("Another transaction already exists for this validation.");
         }
     }
-
     private void createPendingPayment(Event event) {
         var totalAmount = calculateAmount(event);
         var totalItems = calculateTotalItems(event);
@@ -65,6 +77,7 @@ public class PaymentService {
         save(payment);
         setEventAmountItems(event, payment);
     }
+
     private void handleSuccess(Event event) {
         event.setStatus(SUCCESS);
         event.setSource(CURRENT_SOURCE);
@@ -80,6 +93,11 @@ public class PaymentService {
         event.addToHistory(history);
     }
 
+    private void handleFailCurrentNotExecuted(Event event, String message) {
+        event.setStatus(ROLLBACK_PENDING);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "Fail to realize the payment ".concat(message));
+    }
     private double calculateAmount(Event event) {
         return event
                 .getPayload().getProducts()
@@ -104,6 +122,7 @@ public class PaymentService {
     private void save(Payment payment) {
         paymentRepository.save(payment);
     }
+
     private Payment findByOrderIdAndTransactionId(Event event) {
         return paymentRepository.findByOrderIdAndTransactionId(event.getOrderId(), event.getTransactionId())
                 .orElseThrow(() -> new ValidationException("Payment not found by OrderID and TransactionID"));
@@ -113,9 +132,18 @@ public class PaymentService {
             throw new ValidationException("The minimum amount is ".concat(MIN_AMOUNT_VALUE.toString()));
         }
     }
-
     private void changePaymentStatusToSuccess(Payment payment) {
         payment.setStatus(EPaymentStatus.SUCCESS);
         save(payment);
     }
+
+    private void changePaymentStatusToRefund(Event event) {
+        var payment = findByOrderIdAndTransactionId(event);
+        payment.setStatus(EPaymentStatus.REFUND);
+        setEventAmountItems(event, payment);
+        save(payment);
+    }
+
+
+
 }
