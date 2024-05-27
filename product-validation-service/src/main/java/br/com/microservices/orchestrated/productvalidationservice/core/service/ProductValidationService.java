@@ -52,7 +52,6 @@ public class ProductValidationService {
         event.getPayload().getProducts().forEach(product -> {
             checkAllValidationsByProduct(product);
         });
-
     }
 
     private static void validatePayloadListProductsInformed(Event event) {
