@@ -1,5 +1,5 @@
 version: '3'
-
+#para desligar os containers usamos -> docker-compose down e para habilitar -> docker-compose up --build -d
 services:
 
   order-db:
@@ -12,7 +12,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=123456
     ports:
-      - "28018:27017"
+      - "27017:27017"
 
   product-db:
     container_name: product-db
