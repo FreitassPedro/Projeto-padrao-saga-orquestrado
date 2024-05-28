@@ -16,7 +16,7 @@ public class JsonUtil {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (Exception e) {
-            log.error("Exception order-service convertion toJson");
+            log.error("Exception payment-service convertion toJson");
             return "";
         }
     }
