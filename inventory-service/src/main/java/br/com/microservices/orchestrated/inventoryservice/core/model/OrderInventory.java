@@ -32,7 +32,7 @@ public class OrderInventory {
     @Column(nullable = false)
     private Integer oldQuantity;
     @Column(nullable = false)
-    private Integer newValue;
+    private Integer newQuantity;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -4,7 +4,10 @@ import br.com.microservices.orchestrated.inventoryservice.core.enums.ESagaStatus
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 @Getter@Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Event {
@@ -16,4 +19,11 @@ public class Event {
     private ESagaStatus status;
     private List<History> eventHistory;
     private LocalDateTime createdAt;
+
+    public void addToHistory(History history) {
+        if (isEmpty(eventHistory)) {
+            eventHistory = new ArrayList<>();
+        }
+        eventHistory.add(history);
+    }
 }

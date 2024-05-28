@@ -81,7 +81,7 @@ public class PaymentService {
     private void handleSuccess(Event event) {
         event.setStatus(SUCCESS);
         event.setSource(CURRENT_SOURCE);
-        addHistory(event, "payment realized successfully!");
+        addHistory(event, "Payment realized successfully!");
     }
     private void addHistory(Event event, String message) {
         var history = History.builder()
