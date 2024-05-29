@@ -1,4 +1,4 @@
-version: '3'
+
 #para desligar os containers usamos -> docker-compose down e para habilitar -> docker-compose up --build -d
 services:
 
